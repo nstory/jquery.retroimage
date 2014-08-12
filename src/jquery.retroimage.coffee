@@ -1,43 +1,67 @@
 ###
 jquery.retroimage
-TODO: do nothing if canvas is unavailable
 ###
 
 $ = jQuery
 
-# FIXME: this should give the natural width and height!
-imageDimensions = (img) ->
-  [img.width, img.height]
-
-dither = (imageData) ->
-  for y in [0...imageData.height]
-    for x in [0...imageData.width]
-      i = (y*imageData.width + x)*4
-
 $.fn.retroimage = (options) ->
-  (this.filter 'img').each (_, element) ->
-    $e= $(element)
+  (this.filter 'img').each (_, img) ->
+    canvas = imageToCanvas img
+    greys = canvasToGreyscale canvas
+    dithered = ditherPlane greys, canvas.width, canvas.height
+    writePlanesToCanvas canvas, dithered, dithered, dithered
+    img.src = canvas.toDataURL()
 
-    # create a canvas adjacent to the image
-    canvas = ($canvas = $ '<canvas />')[0]
+floydSteinberg = [[1,0,7/16],[-1,1,3/16],[0,1,5/16],[1,1,1/16]]
+$.fn.retroimage.ditherPlane = ditherPlane = (plane, width, height, kernel=floydSteinberg) ->
+  plane = (p for p in plane) # copy
+  quant = (v) -> Math.round v
+  for y in [0...height]
+    for x in [0...width]
+      i = y*width+x
+      oldvalue = plane[i]
+      newvalue = plane[i] = quant oldvalue
+      err = oldvalue - newvalue
+      for k in kernel
+        [dx,dy,frac] = k
+        nx = x+dx
+        ny = y+dy
+        if nx < 0 or nx >= width
+          continue
+        if ny < 0 or ny >= height
+          continue
+        plane[ny*width+nx] += err*frac
+  plane
 
-    # set width and height on the page to match that of the img element
-    $canvas.width($e.width())
-    $canvas.height($e.height())
+$.fn.retroimage.imageToCanvas = imageToCanvas = (img) ->
+  # create a canvas of matching width and height
+  canvas = ($ '<canvas />')[0]
+  [canvas.width, canvas.height] = [img.width, img.height]
 
-    # set width & height of the backing buffer to match that of the image file
-    [canvas.width, canvas.height] = imageDimensions element
+  # draw the original image onto the canvas
+  ctx = canvas.getContext '2d'
+  ctx.drawImage img, 0, 0
 
-    $e.after($canvas)
+  canvas
 
-    # draw the original image onto the canvas
-    ctx = canvas.getContext '2d'
-    ctx.drawImage element, 0, 0
+$.fn.retroimage.extractPlane = extractPlane = (canvas, planeOffset) ->
+  ctx = canvas.getContext '2d'
+  imageData = ctx.getImageData 0,0,canvas.width,canvas.height
+  for i in [0...canvas.width*canvas.height]
+    imageData.data[i*4+planeOffset]/255
 
-    # extract the image data, dither, write dithered data back to canvas
-    imageData = ctx.getImageData 0,0,canvas.width,canvas.height
-    dither imageData
-    ctx.putImageData imageData, 0, 0
+$.fn.retroimage.canvasToGreyscale = canvasToGreyscale = (canvas) ->
+  planes = (extractPlane canvas, i for i in [0...3])
+  for idx in [0...planes[0].length]
+    (planes[0][idx] + planes[1][idx] + planes[2][idx])/3
 
-    # hide the original image tag
-    $e.hide()
+$.fn.retroimage.writePlanesToCanvas = writePlanesToCanvas = (canvas, r_plane, g_plane, b_plane) ->
+  ctx = canvas.getContext '2d'
+  imageData = ctx.getImageData 0,0,canvas.width,canvas.height
+  data = imageData.data
+  for i in [0...r_plane.length]
+    data[i*4] = r_plane[i]*255
+    data[i*4+1] = g_plane[i]*255
+    data[i*4+2] = b_plane[i]*255
+    data[i*4+3] = 255
+  ctx.putImageData imageData, 0, 0

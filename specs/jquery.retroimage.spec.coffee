@@ -1,55 +1,66 @@
 # 2x2 image of rgb(128,128,128)
 grey_png = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVQI12NsaGhgYGBgYmBgYGBgAAASKgGEjiuzjwAAAABJRU5ErkJggg=='
 
+# helper functions
+image = (data, cb) ->
+  $img = $ '<img>'
+  $img.load ->
+    cb($img[0])
+  $img.attr 'src', 'data:image/png;base64,' + data
+
+canvasData = (canvas) ->
+  ctx = canvas.getContext '2d'
+  id = ctx.getImageData 0,0,canvas.width,canvas.height
+  Array.prototype.slice.call(id.data)
+
+# private functions we want to test
+imageToCanvas = $.fn.retroimage.imageToCanvas
+extractPlane = $.fn.retroimage.extractPlane
+canvasToGreyscale = $.fn.retroimage.canvasToGreyscale
+ditherPlane = $.fn.retroimage.ditherPlane
+writePlanesToCanvas = $.fn.retroimage.writePlanesToCanvas
+
 describe "jquery.retroimage", ->
-  $play_area = undefined
-  $img = undefined
+  describe 'imageToCanvas', ->
+    it 'converts an image to a canvas', (done) ->
+      image grey_png, (img) ->
+        canvas = imageToCanvas img
+        data = canvasData canvas
+        expect(data).toEqual [
+          128,128,128,255
+          128,128,128,255
+          128,128,128,255
+          128,128,128,255
+        ]
+        done()
 
-  canvas = ->
-    $img.next()
+  describe 'extractPlane', ->
+    it 'extracts a single color plane as floats', (done) ->
+      image grey_png, (img) ->
+        canvas = imageToCanvas img
+        redPlane = extractPlane canvas, 0
+        expect(redPlane).toEqual [128/255, 128/255, 128/255, 128/255]
+        done()
 
-  beforeEach ->
-    # all tests operate on elements under $play_area (we don't want to just
-    # use body b/c Jasmine has some stuff in the DOM)
-    if $play_area? then $play_area.remove()
-    $play_area = ($ '<div class="test-play-area">').appendTo($ 'body')
-    $img = $ '<img width="2" height="2">'
-    $img.attr 'src', 'data:image/png;base64,' + grey_png
-    $play_area.append $img
+  describe 'canvasToGreyscale', ->
+    it 'extracts a floating-point greyscale array', (done) ->
+      image grey_png, (img) ->
+        canvas = imageToCanvas img
+        greys = canvasToGreyscale canvas
+        expect(greys).toEqual [128/255, 128/255, 128/255, 128/255]
+        done()
 
-  it "hides the original image", ->
-    $img.retroimage()
-    expect($img.is ':visible').toBe false
+  describe 'ditherPlane', ->
+    it 'converts 0.5 to checkerboard', ->
+      dithered = ditherPlane [0.5,0.5,0.5,0.5], 2, 2
+      expect(dithered).toEqual [1,0,0,1]
 
-  it "creates an adjacent canvas element", ->
-    $img.retroimage()
-    expect($img.next().prop 'tagName').toEqual 'CANVAS'
-
-  it "creates one canvas per image element", ->
-    $play_area.append '<img width="8" height="8">'
-    ($play_area.find 'img').retroimage()
-    $canvases = $play_area.find('canvas')
-    expect($canvases.eq(0).width()).toEqual 2
-    expect($canvases.eq(1).width()).toEqual 8
-
-  it "canvas has same visible width and height as image element", ->
-    $img.retroimage()
-    expect [canvas().width(), canvas().height()]
-    .toEqual [2, 2]
-
-  # I can't get this to work! (at least in Phantom)
-  xit "canvas backing is width and height of image file", ->
-    $img.retroimage()
-    expect [canvas()[0].width, canvas()[0].height]
-    .toEqual [2,2]
-
-  it "should convert grey to a checkerboard pattern", ->
-    $img.retroimage()
-    imageData = (canvas()[0].getContext '2d').getImageData 0, 0, 2, 2
-    data = Array.prototype.slice.call(imageData.data)
-    expect(data).toEqual [
-      0,0,0,255
-      255,255,255,255
-      255,255,255,255
-      0,0,0,255
-    ]
+  describe 'writePlanesToCanvas', ->
+    it 'practices detrinification', ->
+      canvas = document.createElement 'canvas'
+      [canvas.width, canvas.height] = [2,1]
+      writePlanesToCanvas canvas, [0,1], [1,0], [0,1]
+      expect(canvasData canvas).toEqual [
+        0,255,0,255,
+        255,0,255,255
+      ]
