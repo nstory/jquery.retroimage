@@ -1,11 +1,35 @@
 <!DOCTYPE html>
 <html>
   <body>
-    <img src="enterprise-d.jpg">
-    <script src="specs/jquery-1.11.1.js"></script>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="build/src/jquery.retroimage.js"></script>
     <script>
-      $('img').retroimage();
+      var kernels = ['none', 'oneDimensional', 'floydSteinberg', 'large'];
+      var shades = [1,2,6];
+      var colors = [false, true];
+      for (var i = 0; i < colors.length; i++) {
+        var color = colors[i];
+        var $table = $('<table>').appendTo($('body'));
+        for (var j = 0; j < shades.length; j++) {
+          var shade = shades[j];
+          var $tr = $('<tr>').appendTo($table);
+          for (var k = 0; k < kernels.length; k++) {
+            var kernel = kernels[k];
+            var $td = $('<td>').appendTo($tr);
+            var $img = $('<img src="/enterprise-d.jpg">').appendTo($td);
+            $td.append('<div>' + shade + ' shade; ' + kernel + '</div>');
+            (function(color, shade, kernel) {
+                var done = false;
+                $img.load(function() {
+                  if (!done) {
+                    done = true;
+                    $(this).retroimage({kernel:kernel, shades:shade, color:color});
+                  }
+                });
+            })(color,shade,kernel);
+          }
+        }
+      }
     </script>
   </body>
 </html>

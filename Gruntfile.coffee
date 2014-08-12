@@ -25,6 +25,7 @@ module.exports = (grunt) ->
       test:
         src: [
           'specs/jquery-1.11.1.js'
+          'bower_components/jquery/dist/jquery.js'
           'build/src/*.js'
         ]
         options:

@@ -5,17 +5,42 @@ jquery.retroimage
 $ = jQuery
 
 $.fn.retroimage = (options) ->
+  settings = $.extend({
+    'kernel': 'floydSteinberg'
+    'shades': 1
+    'color': false
+  }, options)
+
+  kernel = kernels[settings.kernel]
+  quant = (v) -> Math.round(v*settings.shades)/settings.shades
+  color = settings.color
+
   (this.filter 'img').each (_, img) ->
     canvas = imageToCanvas img
-    greys = canvasToGreyscale canvas
-    dithered = ditherPlane greys, canvas.width, canvas.height
-    writePlanesToCanvas canvas, dithered, dithered, dithered
+    if color
+      ditheredPlanes = for i in [0...3]
+        plane = extractPlane canvas, i
+        ditherPlane plane, canvas.width, canvas.height, kernel, quant
+      writePlanesToCanvas canvas, ditheredPlanes[0], ditheredPlanes[1], ditheredPlanes[2]
+    else
+      greys = canvasToGreyscale canvas
+      dithered = ditherPlane greys, canvas.width, canvas.height, kernel, quant
+      writePlanesToCanvas canvas, dithered, dithered, dithered
     img.src = canvas.toDataURL()
 
-floydSteinberg = [[1,0,7/16],[-1,1,3/16],[0,1,5/16],[1,1,1/16]]
-$.fn.retroimage.ditherPlane = ditherPlane = (plane, width, height, kernel=floydSteinberg) ->
+kernels =
+  none: []
+  oneDimensional: [[1,0,1]]
+  twoDimensional: [[1,0,2/4],[0,1,1/4],[1,1,1/4]]
+  floydSteinberg: [[1,0,7/16],[-1,1,3/16],[0,1,5/16],[1,1,1/16]]
+  large: [
+    [1,0,7/48],[2,0,5/48],
+    [-2,1,3/48],[-1,1,5/48],[0,1,7/48],[1,1,5/48],[2,1,3/48]
+    [-2,2,1/48],[-1,2,3/48],[0,2,5/48],[1,2,3/48],[2,2,1/48]
+  ]
+
+$.fn.retroimage.ditherPlane = ditherPlane = (plane, width, height, kernel=kernels.floydSteinberg, quant = Math.round) ->
   plane = (p for p in plane) # copy
-  quant = (v) -> Math.round v
   for y in [0...height]
     for x in [0...width]
       i = y*width+x
