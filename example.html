@@ -4,7 +4,7 @@
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="build/src/jquery.retroimage.js"></script>
     <script>
-      var kernels = ['none', 'oneDimensional', 'floydSteinberg', 'large'];
+      var kernels = ['none', 'floydSteinberg', 'large', 'atkinson'];
       var shades = [1,2,6];
       var colors = [false, true];
       for (var i = 0; i < colors.length; i++) {
@@ -16,7 +16,7 @@
           for (var k = 0; k < kernels.length; k++) {
             var kernel = kernels[k];
             var $td = $('<td>').appendTo($tr);
-            var $img = $('<img src="/enterprise-d.jpg">').appendTo($td);
+            var $img = $('<img src="images/enterprise-d.jpg">').appendTo($td);
             $td.append('<div>' + shade + ' shade; ' + kernel + '</div>');
             (function(color, shade, kernel) {
                 var done = false;

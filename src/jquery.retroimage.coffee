@@ -6,6 +6,7 @@ $ = jQuery
 
 $.fn.retroimage = (options) ->
   settings = $.extend({
+    'algorithm': 'errorDifusion'
     'kernel': 'floydSteinberg'
     'shades': 1
     'color': false
@@ -33,10 +34,15 @@ kernels =
   oneDimensional: [[1,0,1]]
   twoDimensional: [[1,0,2/4],[0,1,1/4],[1,1,1/4]]
   floydSteinberg: [[1,0,7/16],[-1,1,3/16],[0,1,5/16],[1,1,1/16]]
-  large: [
+  jarvisJudiceNinke: [
     [1,0,7/48],[2,0,5/48],
     [-2,1,3/48],[-1,1,5/48],[0,1,7/48],[1,1,5/48],[2,1,3/48]
     [-2,2,1/48],[-1,2,3/48],[0,2,5/48],[1,2,3/48],[2,2,1/48]
+  ]
+  atkinson: [
+    [1,0,1/8],[2,0,1/8],
+    [-1,1,1/8],[0,1,1/8],[1,1,1/8],
+    [0,2,1/8]
   ]
 
 $.fn.retroimage.ditherPlane = ditherPlane = (plane, width, height, kernel=kernels.floydSteinberg, quant = Math.round) ->
