@@ -14,7 +14,9 @@ $('img').retroimage(
 ```
 
 ## Installation
-_TODO_
+```bash
+$ bower install --save 'nstory/jquery.retroimage'
+```
 
 ## Examples
 Options | Image
