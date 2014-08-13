@@ -1,18 +1,21 @@
 {
   "name": "retroimage",
-  "version": "0.0.0",
   "authors": [
     "Nathan Story <nathanielstory@gmail.com>"
   ],
   "description": "JQuery plugin for dithering images in a retro fashion",
   "license": "MIT",
   "private": true,
+  "main": "lib/jquery.retroimage.js",
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
-    "test",
-    "tests"
+    "Gruntfile.coffee",
+    "example.html",
+    "images",
+    "specs",
+    "src"
   ],
   "dependencies": {
     "jquery": "~2.1.1"

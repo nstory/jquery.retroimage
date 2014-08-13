@@ -7,10 +7,11 @@ module.exports = (grunt) ->
       src:
         files: [
           expand: true
+          flatten: true
           ext: '.js'
           extDot: 'last'
           src: 'src/*.coffee'
-          dest: 'build/'
+          dest: 'lib/'
         ]
       specs:
         files: [
@@ -24,17 +25,15 @@ module.exports = (grunt) ->
     jasmine:
       test:
         src: [
-          'specs/jquery-1.11.1.js'
           'bower_components/jquery/dist/jquery.js'
-          'build/src/*.js'
+          'lib/*.js'
         ]
         options:
           specs: ['build/specs/*.spec.js']
 
     watch:
-      options: {
+      options:
         atBegin: true
-      }
       test:
         files: ['Gruntfile.coffee', 'src/*', 'specs/*']
         tasks: ['test']
